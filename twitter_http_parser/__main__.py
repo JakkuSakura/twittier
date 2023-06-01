@@ -24,12 +24,16 @@ def get_favorite_users(response: dict):
         entries = data['favoriters_timeline']['timeline']['instructions'][0]['entries']
     except KeyError:
         return
+    entry_rt = []
+    dynamic_rt = ''
     for entry in entries:
         try:
             legacy = entry['content']['itemContent']['user_results']['result']['legacy']
         except KeyError:
             continue
-        return entry, f'@{legacy["screen_name"]} 喜欢了推文\n'
+        entry_rt.append(entry)
+        dynamic_rt += f'@{legacy["screen_name"]} 喜欢了推文\n'
+    return entry_rt, dynamic_rt
 
 
 def get_retweeters(response: dict):
@@ -42,12 +46,16 @@ def get_retweeters(response: dict):
         entries = data['retweeters_timeline']['timeline']['instructions'][0]['entries']
     except KeyError:
         return
+    entry_rt = []
+    dynamic_rt = ''
     for entry in entries:
         try:
             legacy = entry['content']['itemContent']['user_results']['result']['legacy']
         except KeyError:
             continue
-        return entry, f'@{legacy["screen_name"]} 转推了推文\n'
+        entry_rt.append(entry)
+        dynamic_rt += f'@{legacy["screen_name"]} 转推了推文\n'
+    return entry_rt, dynamic_rt
 
 
 def get_comments(response: dict):
@@ -60,6 +68,8 @@ def get_comments(response: dict):
         entries = data['threaded_conversation_with_injections_v2']['instructions'][0]['entries']
     except KeyError:
         return
+    entry_rt = []
+    dynamic_rt = ''
     for entry in entries:
         if not entry['entryId'].startswith('conversationthread'):
             continue
@@ -69,7 +79,9 @@ def get_comments(response: dict):
                     'result']['legacy']
         except KeyError:
             continue
-        return entry, f'@{legacy["screen_name"]} 评论了推文\n'
+        entry_rt.append(entry)
+        dynamic_rt += f'@{legacy["screen_name"]} 评论了推文\n'
+    return entry_rt, dynamic_rt
 
 
 def get_quotes(response: dict):
@@ -121,21 +133,21 @@ def main() -> int:
             if rt is None:
                 continue
             e, d = rt
-            likes.append(e)
+            likes += e
             dynamic += d
         elif req_type == RequestType.RETWEETERS:
             rt = get_retweeters(response)
             if rt is None:
                 continue
             e, d = rt
-            retweets.append(e)
+            retweets += e
             dynamic += d
         elif req_type == RequestType.COMMENT:
             rt = get_comments(response)
             if rt is None:
                 continue
             e, d = rt
-            comments.append(e)
+            comments += e
             dynamic += d
         elif req_type == RequestType.QUOTES:
             e = get_quotes(response)
