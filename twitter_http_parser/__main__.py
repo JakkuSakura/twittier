@@ -117,19 +117,30 @@ def main() -> int:
             continue
 
         if req_type == RequestType.FAVORITERS:
-            e, d = get_favorite_users(response)
+            rt = get_favorite_users(response)
+            if rt is None:
+                continue
+            e, d = rt
             likes.append(e)
             dynamic += d
         elif req_type == RequestType.RETWEETERS:
-            e, d = get_retweeters(response)
+            rt = get_retweeters(response)
+            if rt is None:
+                continue
+            e, d = rt
             retweets.append(e)
             dynamic += d
         elif req_type == RequestType.COMMENT:
-            e, d = get_comments(response)
+            rt = get_comments(response)
+            if rt is None:
+                continue
+            e, d = rt
             comments.append(e)
             dynamic += d
         elif req_type == RequestType.QUOTES:
             e = get_quotes(response)
+            if e is None:
+                continue
             quotes += e
 
     with open('likes.json', 'w', encoding='utf-8') as f:
