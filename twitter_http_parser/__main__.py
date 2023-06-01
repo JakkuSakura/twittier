@@ -14,16 +14,7 @@ def get_type_by_url(url: str) -> Optional[RequestType]:
     return None
 
 
-likes: List[dict] = []
-retweets: List[dict] = []
-comments: List[dict] = []
-quotes: List[dict] = []
-
-dynamic: str = ''
-
 def get_favorite_users(response: dict):
-    global likes
-    global dynamic
     data = json.loads(response['content']['text'])
     if 'data' in data:
         data = data['data']
@@ -38,13 +29,10 @@ def get_favorite_users(response: dict):
             legacy = entry['content']['itemContent']['user_results']['result']['legacy']
         except KeyError:
             continue
-        dynamic += f'@{legacy["screen_name"]} 喜欢了推文\n'
-        likes.append(entry)
+        return entry, f'@{legacy["screen_name"]} 喜欢了推文\n'
 
 
 def get_retweeters(response: dict):
-    global retweets
-    global dynamic
     data = json.loads(response['content']['text'])
     if 'data' in data:
         data = data['data']
@@ -59,13 +47,10 @@ def get_retweeters(response: dict):
             legacy = entry['content']['itemContent']['user_results']['result']['legacy']
         except KeyError:
             continue
-        dynamic += f'@{legacy["screen_name"]} 转推了推文\n'
-        retweets.append(entry)
+        return entry, f'@{legacy["screen_name"]} 转推了推文\n'
 
 
 def get_comments(response: dict):
-    global comments
-    global dynamic
     data = json.loads(response['content']['text'])
     if 'data' in data:
         data = data['data']
@@ -79,29 +64,35 @@ def get_comments(response: dict):
         if not entry['entryId'].startswith('conversationthread'):
             continue
         try:
-            # print(json.dumps(entry, indent=4, ensure_ascii=False))
-            # content / items / 0 / item / item / tweet_results / result / core / user_results / result / legacy
-            # content / items / 0 / item / itemContent / tweet_results / result / core / user_results / result / legacy
-            legacy = entry['content']['items'][0]['item']['itemContent']['tweet_results']['result']['core']['user_results']['result']['legacy']
+            legacy = \
+                entry['content']['items'][0]['item']['itemContent']['tweet_results']['result']['core']['user_results'][
+                    'result']['legacy']
         except KeyError:
             continue
-        dynamic += f'@{legacy["screen_name"]} 评论了推文\n'
-        comments.append(entry)
+        return entry, f'@{legacy["screen_name"]} 评论了推文\n'
 
 
 def get_quotes(response: dict):
-    global quotes
     data = json.loads(response['content']['text'])
     try:
         tweets = data['globalObjects']['tweets']  # type: dict
     except KeyError:
         return
+    rt = []
     for tweet in tweets.values():
         if 'quoted_status_id' in tweet:
-            quotes.append(tweet)
+            rt.append(tweet)
+    return rt
 
 
 def main() -> int:
+    likes: List[dict] = []
+    retweets: List[dict] = []
+    comments: List[dict] = []
+    quotes: List[dict] = []
+
+    dynamic: str = ''
+
     logging.basicConfig(
         level=logging.INFO,
         format='[%(asctime)s] [%(threadName)s/%(levelname)s]: %(message)s',
@@ -126,13 +117,20 @@ def main() -> int:
             continue
 
         if req_type == RequestType.FAVORITERS:
-            get_favorite_users(response)
+            e, d = get_favorite_users(response)
+            likes.append(e)
+            dynamic += d
         elif req_type == RequestType.RETWEETERS:
-            get_retweeters(response)
+            e, d = get_retweeters(response)
+            retweets.append(e)
+            dynamic += d
         elif req_type == RequestType.COMMENT:
-            get_comments(response)
+            e, d = get_comments(response)
+            comments.append(e)
+            dynamic += d
         elif req_type == RequestType.QUOTES:
-            get_quotes(response)
+            e = get_quotes(response)
+            quotes += e
 
     with open('likes.json', 'w', encoding='utf-8') as f:
         json.dump(likes, f, ensure_ascii=False, indent=2)
