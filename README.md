@@ -30,10 +30,10 @@ pip install twittier
   - 程序会在当前目录下生成 `comments.json`、`likes.json`、`quotes.json`、`retweets.json` 和 `dynamic.txt` 文件，分别对应评论、喜欢、引用、转推和动态（包含所有的）。
 
 - lucky_draw
-  - 使用命令行命令 `python -m twittier lucky_draw <动态文件路径> -p [抽取数量列表]` 运行程序
+  - 使用命令行命令 `python -m twittier draw <动态文件路径> -p [抽取数量列表]` 运行程序
   - 程序将会输出抽取的用户列表以及抽到的用户名单。
-  - 例如：`python -m twittier lucky_draw dynamic.txt -p 1 2 3`，将会从 `dynamic.txt` 中抽取 1 个、2 个和 3 个用户。
+  - 例如：`python -m twittier draw dynamic.txt -p 1 2 3`，将会从 `dynamic.txt` 中抽取 1 个、2 个和 3 个用户。
   - 也可以添加 `-r` 来限定抽取的范围。默认为 `评论+喜欢+转推`
-  - 例如：`python -m twittier lucky_draw dynamic.txt -p 1 2 3 -r like`，将会从 `dynamic.txt` 中抽取 1 个、2 个和 3 个`喜欢了推文`的用户。
-  - 例如：`python -m twittier lucky_draw dynamic.txt -p 1 2 3 -r like retweet`，将会从 `dynamic.txt` 中抽取 1 个、2 个和 3 个`喜欢了推文并且转推了推文`的用户。
+  - 例如：`python -m twittier draw dynamic.txt -p 1 2 3 -r like`，将会从 `dynamic.txt` 中抽取 1 个、2 个和 3 个`喜欢了推文`的用户。
+  - 例如：`python -m twittier draw dynamic.txt -p 1 2 3 -r like retweet`，将会从 `dynamic.txt` 中抽取 1 个、2 个和 3 个`喜欢了推文并且转推了推文`的用户。
 
