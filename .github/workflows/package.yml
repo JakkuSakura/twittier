@@ -1,0 +1,60 @@
+name: CI for twittier
+on:
+  push:
+    paths:
+      - 'twittier/**'
+      - '.github/**'
+      - '*.py'
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    name: Assemble a dev source compressed file
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.5.2
+
+      - name: Create Dev Build
+        run: |
+          mkdir twittier
+          mv * twittier || true
+          cd twittier
+          rm -rf .git
+          rm -f .gitignore setup.py *.MD
+          cd ..
+          zip -r twittier-dev.zip twittier
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: twittier dev source for ${{ github.sha }}
+          path: twittier-dev.zip
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build with python 3.x
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.5.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel
+      
+      - name: Create distribution
+        run: |
+          python setup.py sdist bdist_wheel
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: twittier package distribution for ${{ github.sha }}
+          path: dist/
+
+
