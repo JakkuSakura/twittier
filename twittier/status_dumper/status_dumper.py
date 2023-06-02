@@ -1,7 +1,4 @@
-import argparse
 import json
-import logging
-import sys
 from typing import Optional, List
 
 from ._types import RequestType
@@ -97,7 +94,7 @@ def get_quotes(response: dict):
     return rt
 
 
-def main() -> int:
+def dumper(path: str) -> int:
     likes: List[dict] = []
     retweets: List[dict] = []
     comments: List[dict] = []
@@ -105,17 +102,7 @@ def main() -> int:
 
     dynamic: str = ''
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format='[%(asctime)s] [%(threadName)s/%(levelname)s]: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-
-    parser = argparse.ArgumentParser(prog='status_dumper')
-    parser.add_argument('path', help='path to twitter .har file')
-    args = parser.parse_args()
-
-    with open(args.path, 'r', encoding='utf-8') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         har = json.load(f)
 
     entries = har['log']['entries']
@@ -171,7 +158,3 @@ def main() -> int:
         f.write(dynamic)
 
     return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main())
