@@ -3,7 +3,6 @@ from typing import List
 
 
 def draw(path: str, pools: List[int], requires: List[str]):
-
     comments = set()
     retweets = set()
     likes = set()
@@ -23,11 +22,8 @@ def draw(path: str, pools: List[int], requires: List[str]):
             quotes.add(dynamic.split()[0])
 
     retweets = retweets | quotes
-
-    if len(requires) == 0:
-        requires = ['comment', 'retweet', 'like']
-
     users = comments | retweets | likes
+
     for require in requires:
         if require == 'comment':
             users = users & comments
@@ -55,5 +51,3 @@ def draw(path: str, pools: List[int], requires: List[str]):
         users = users - set(user_sample)
 
         print(f'====== Pool: {pool + 1} End ======\n\n')
-
-

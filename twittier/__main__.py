@@ -16,7 +16,8 @@ def main():
     parser_draw.add_argument('path', help='path to twitter user list')
     parser_draw.add_argument('-p', '--pool', nargs='+', type=int, help='pool of users to draw from', default=[])
     parser_draw.add_argument('-r', '--requires', nargs='+', type=str,
-                             help='What kind of action is needed. (comment, retweet, like)', default=[])
+                             help='What kind of action is needed. (comment, retweet, like)',
+                             default=['like', 'retweet', 'comment'])
 
     args = parser.parse_args()
 
