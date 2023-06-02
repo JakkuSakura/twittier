@@ -111,7 +111,7 @@ def main() -> int:
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    parser = argparse.ArgumentParser(prog='twitter_http_parser')
+    parser = argparse.ArgumentParser(prog='status_dumper')
     parser.add_argument('path', help='path to twitter .har file')
     args = parser.parse_args()
 
