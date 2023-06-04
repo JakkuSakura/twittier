@@ -161,3 +161,8 @@ cython_debug/
 
 
 data/
+comments.json
+dynamic.txt
+likes.json
+quotes.json
+retweets.json
