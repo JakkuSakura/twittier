@@ -1,5 +1,5 @@
 import json
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from ._types import RequestType
 
@@ -22,14 +22,14 @@ def get_favorite_users(response: dict):
     except KeyError:
         return
     entry_rt = []
-    dynamic_rt = ''
+    dynamic_rt = []
     for entry in entries:
         try:
             legacy = entry['content']['itemContent']['user_results']['result']['legacy']
         except KeyError:
             continue
         entry_rt.append(entry)
-        dynamic_rt += f'@{legacy["screen_name"]} 喜欢了推文\n'
+        dynamic_rt.append(f'@{legacy["screen_name"]} 喜欢了推文')
     return entry_rt, dynamic_rt
 
 
@@ -44,14 +44,14 @@ def get_retweeters(response: dict):
     except KeyError:
         return
     entry_rt = []
-    dynamic_rt = ''
+    dynamic_rt = []
     for entry in entries:
         try:
             legacy = entry['content']['itemContent']['user_results']['result']['legacy']
         except KeyError:
             continue
         entry_rt.append(entry)
-        dynamic_rt += f'@{legacy["screen_name"]} 转推了推文\n'
+        dynamic_rt.append(f'@{legacy["screen_name"]} 转推了推文')
     return entry_rt, dynamic_rt
 
 
@@ -66,7 +66,7 @@ def get_comments(response: dict):
     except KeyError:
         return
     entry_rt = []
-    dynamic_rt = ''
+    dynamic_rt = []
     for entry in entries:
         if not entry['entryId'].startswith('conversationthread'):
             continue
@@ -77,7 +77,7 @@ def get_comments(response: dict):
         except KeyError:
             continue
         entry_rt.append(entry)
-        dynamic_rt += f'@{legacy["screen_name"]} 评论了推文\n'
+        dynamic_rt.append(f'@{legacy["screen_name"]} 评论了推文')
     return entry_rt, dynamic_rt
 
 
@@ -93,6 +93,16 @@ def get_quotes(response: dict):
             rt.append(tweet)
     return rt
 
+def distinct_objects(objs: List[Any]) -> List[Any]:
+    strs = set()
+    for obj in objs:
+        strs.add(json.dumps(obj, ensure_ascii=False))
+    strs = list(strs)
+    strs.sort()
+    output = []
+    for str in strs:
+        output.append(json.loads(str))
+    return output
 
 def dumper(path: str) -> int:
     likes: List[dict] = []
@@ -100,7 +110,7 @@ def dumper(path: str) -> int:
     comments: List[dict] = []
     quotes: List[dict] = []
 
-    dynamic: str = ''
+    dynamic: List[str] = []
 
     with open(path, 'r', encoding='utf-8') as f:
         har = json.load(f)
@@ -121,21 +131,21 @@ def dumper(path: str) -> int:
                 continue
             e, d = rt
             likes += e
-            dynamic += d
+            dynamic.extend(d)
         elif req_type == RequestType.RETWEETERS:
             rt = get_retweeters(response)
             if rt is None:
                 continue
             e, d = rt
             retweets += e
-            dynamic += d
+            dynamic.extend(d)
         elif req_type == RequestType.COMMENT:
             rt = get_comments(response)
             if rt is None:
                 continue
             e, d = rt
             comments += e
-            dynamic += d
+            dynamic.extend(d)
         elif req_type == RequestType.QUOTES:
             e = get_quotes(response)
             if e is None:
@@ -143,18 +153,18 @@ def dumper(path: str) -> int:
             quotes += e
 
     with open('likes.json', 'w', encoding='utf-8') as f:
-        json.dump(likes, f, ensure_ascii=False, indent=2)
+        json.dump(distinct_objects(likes), f, ensure_ascii=False, indent=2)
 
     with open('retweets.json', 'w', encoding='utf-8') as f:
-        json.dump(retweets, f, ensure_ascii=False, indent=2)
+        json.dump(distinct_objects(retweets), f, ensure_ascii=False, indent=2)
 
     with open('comments.json', 'w', encoding='utf-8') as f:
-        json.dump(comments, f, ensure_ascii=False, indent=2)
+        json.dump(distinct_objects(comments), f, ensure_ascii=False, indent=2)
 
     with open('quotes.json', 'w', encoding='utf-8') as f:
-        json.dump(quotes, f, ensure_ascii=False, indent=2)
-
+        json.dump(distinct_objects(quotes), f, ensure_ascii=False, indent=2)
+    print(distinct_objects(dynamic))
     with open('dynamic.txt', 'w', encoding='utf-8') as f:
-        f.write(dynamic)
+        f.write('\n'.join(distinct_objects(dynamic)))
 
     return 0
