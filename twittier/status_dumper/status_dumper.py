@@ -10,8 +10,12 @@ def get_type_by_url(url: str) -> Optional[RequestType]:
             return t
     return None
 
+def insert_user_action(user_actions: dict[str, set[str]], user: str, action: str):
+    if not user in user_actions:
+        user_actions[user] = set()
+    user_actions[user].add(action)
 
-def get_favorite_users(response: dict):
+def get_favorite_users(response: dict, user_actions: dict[str, set[str]]):
     data = json.loads(response['content']['text'])
     if 'data' in data:
         data = data['data']
@@ -22,18 +26,17 @@ def get_favorite_users(response: dict):
     except KeyError:
         return
     entry_rt = []
-    dynamic_rt = []
     for entry in entries:
         try:
             legacy = entry['content']['itemContent']['user_results']['result']['legacy']
         except KeyError:
             continue
         entry_rt.append(entry)
-        dynamic_rt.append(f'@{legacy["screen_name"]} 喜欢了推文')
-    return entry_rt, dynamic_rt
+        insert_user_action(user_actions, legacy['screen_name'], '喜欢')
+    return entry_rt
 
 
-def get_retweeters(response: dict):
+def get_retweeters(response: dict, user_actions: dict[str, set[str]]):
     data = json.loads(response['content']['text'])
     if 'data' in data:
         data = data['data']
@@ -44,18 +47,18 @@ def get_retweeters(response: dict):
     except KeyError:
         return
     entry_rt = []
-    dynamic_rt = []
     for entry in entries:
         try:
             legacy = entry['content']['itemContent']['user_results']['result']['legacy']
         except KeyError:
             continue
         entry_rt.append(entry)
-        dynamic_rt.append(f'@{legacy["screen_name"]} 转推了推文')
-    return entry_rt, dynamic_rt
+        insert_user_action(user_actions, legacy['screen_name'], '转推')
+    # FIXME: seems to have bugs
+    return entry_rt
 
 
-def get_comments(response: dict):
+def get_comments(response: dict, user_actions: dict[str, set[str]]):
     data = json.loads(response['content']['text'])
     if 'data' in data:
         data = data['data']
@@ -66,7 +69,6 @@ def get_comments(response: dict):
     except KeyError:
         return
     entry_rt = []
-    dynamic_rt = []
     for entry in entries:
         if not entry['entryId'].startswith('conversationthread'):
             continue
@@ -77,8 +79,8 @@ def get_comments(response: dict):
         except KeyError:
             continue
         entry_rt.append(entry)
-        dynamic_rt.append(f'@{legacy["screen_name"]} 评论了推文')
-    return entry_rt, dynamic_rt
+        insert_user_action(user_actions, legacy['screen_name'], '评论')
+    return entry_rt
 
 
 def get_quotes(response: dict):
@@ -91,6 +93,7 @@ def get_quotes(response: dict):
     for tweet in tweets.values():
         if 'quoted_status_id' in tweet:
             rt.append(tweet)
+            # TODO: 引用了推文
     return rt
 
 def distinct_objects(objs: List[Any]) -> List[Any]:
@@ -104,13 +107,20 @@ def distinct_objects(objs: List[Any]) -> List[Any]:
         output.append(json.loads(str))
     return output
 
+def compute_dynamic_list(user_actions: dict[str, set[str]]) -> List[str]:
+    dynamic = []
+    for user, actions in user_actions.items():
+        dynamic.append(f'@{user} {" ".join(actions)}')
+    dynamic.sort()
+    return dynamic
+
 def dumper(path: str) -> int:
     likes: List[dict] = []
     retweets: List[dict] = []
     comments: List[dict] = []
     quotes: List[dict] = []
 
-    dynamic: List[str] = []
+    dynamic: dict[str, str[str]] = {}
 
     with open(path, 'r', encoding='utf-8') as f:
         har = json.load(f)
@@ -126,44 +136,43 @@ def dumper(path: str) -> int:
             continue
 
         if req_type == RequestType.FAVORITERS:
-            rt = get_favorite_users(response)
+            rt = get_favorite_users(response, dynamic)
             if rt is None:
                 continue
-            e, d = rt
-            likes += e
-            dynamic.extend(d)
+            likes.extend(rt)
         elif req_type == RequestType.RETWEETERS:
-            rt = get_retweeters(response)
+            rt = get_retweeters(response, dynamic)
             if rt is None:
                 continue
-            e, d = rt
-            retweets += e
-            dynamic.extend(d)
+            retweets.append(rt)
         elif req_type == RequestType.COMMENT:
-            rt = get_comments(response)
+            rt = get_comments(response, dynamic)
             if rt is None:
                 continue
-            e, d = rt
-            comments += e
-            dynamic.extend(d)
+            comments.append(rt)
         elif req_type == RequestType.QUOTES:
-            e = get_quotes(response)
-            if e is None:
+            rt = get_quotes(response)
+            if rt is None:
                 continue
-            quotes += e
+            quotes.append(rt)
+    likes = distinct_objects(likes)
+    retweets = distinct_objects(retweets)
+    comments = distinct_objects(comments)
+    quotes = distinct_objects(quotes)
+
+    dynamic = compute_dynamic_list(dynamic)
 
     with open('likes.json', 'w', encoding='utf-8') as f:
-        json.dump(distinct_objects(likes), f, ensure_ascii=False, indent=2)
+        json.dump(likes, f, ensure_ascii=False, indent=2)
 
     with open('retweets.json', 'w', encoding='utf-8') as f:
-        json.dump(distinct_objects(retweets), f, ensure_ascii=False, indent=2)
+        json.dump(retweets, f, ensure_ascii=False, indent=2)
 
     with open('comments.json', 'w', encoding='utf-8') as f:
-        json.dump(distinct_objects(comments), f, ensure_ascii=False, indent=2)
+        json.dump(comments, f, ensure_ascii=False, indent=2)
 
     with open('quotes.json', 'w', encoding='utf-8') as f:
-        json.dump(distinct_objects(quotes), f, ensure_ascii=False, indent=2)
-    print(distinct_objects(dynamic))
+        json.dump(quotes, f, ensure_ascii=False, indent=2)
     with open('dynamic.txt', 'w', encoding='utf-8') as f:
         f.write('\n'.join(distinct_objects(dynamic)))
 
