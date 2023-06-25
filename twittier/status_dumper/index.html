@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Twittier</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"/>
+</head>
+<body>
+<div class="ui container">
+    <h1>File Upload Example</h1>
+    <form class="ui form">
+        <button class="ui button" type="button" onclick="upload()">Upload</button>
+    </form>
+</div>
+<table class="ui celled table" id="table-of-like-users">
+    <thead>
+    <tr>
+        <th>Username</th>
+        <th>Age</th>
+    </tr>
+    </thead>
+</table>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+<script src="./status_dumper.js"></script>
+<script>
+    async function upload() {
+        console.log("Picking file");
+        const pickerOpts = {
+            types: [
+                {
+                    description: "HAR file",
+                    accept: {
+                        "har/*": [".har"],
+                    },
+                },
+            ],
+            excludeAcceptAllOption: true,
+            multiple: false,
+        };
+        const files = await window.showOpenFilePicker(pickerOpts)
+        const file = files[0];
+        console.log("Picked file");
+        const fileData = await file.getFile();
+        console.log('file', fileData)
+        const harfile = JSON.parse(await fileData.text())
+        const result = dumper(harfile);
+        console.log("parsed data", result)
+        process(result)
+    }
+
+    function process(users) {
+        var tbody = $("#table-of-like-users tbody");
+        tbody.empty();
+        for (var i = 0; i < users.length; i++) {
+            tbody.append("<tr><td>" + users[i] + "</td></tr>");
+        }
+    }
+</script>
+</body>
+</html>
