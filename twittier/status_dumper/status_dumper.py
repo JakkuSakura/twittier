@@ -114,13 +114,13 @@ def compute_dynamic_list(user_actions: dict[str, set[str]]) -> List[str]:
     dynamic.sort()
     return dynamic
 
-def dumper(path: str) -> int:
+def parse_and_dump_har_file(path: str) -> int:
     likes: List[dict] = []
     retweets: List[dict] = []
     comments: List[dict] = []
     quotes: List[dict] = []
 
-    dynamic: dict[str, str[str]] = {}
+    dynamic: dict[str, set[str]] = {}
 
     with open(path, 'r', encoding='utf-8') as f:
         har = json.load(f)
@@ -144,23 +144,23 @@ def dumper(path: str) -> int:
             rt = get_retweeters(response, dynamic)
             if rt is None:
                 continue
-            retweets.append(rt)
+            retweets.extend(rt)
         elif req_type == RequestType.COMMENT:
             rt = get_comments(response, dynamic)
             if rt is None:
                 continue
-            comments.append(rt)
+            comments.extend(rt)
         elif req_type == RequestType.QUOTES:
             rt = get_quotes(response)
             if rt is None:
                 continue
-            quotes.append(rt)
+            quotes.extend(rt)
     likes = distinct_objects(likes)
     retweets = distinct_objects(retweets)
     comments = distinct_objects(comments)
     quotes = distinct_objects(quotes)
 
-    dynamic = compute_dynamic_list(dynamic)
+    dynamic_merged = compute_dynamic_list(dynamic)
 
     with open('likes.json', 'w', encoding='utf-8') as f:
         json.dump(likes, f, ensure_ascii=False, indent=2)
@@ -174,6 +174,6 @@ def dumper(path: str) -> int:
     with open('quotes.json', 'w', encoding='utf-8') as f:
         json.dump(quotes, f, ensure_ascii=False, indent=2)
     with open('dynamic.txt', 'w', encoding='utf-8') as f:
-        f.write('\n'.join(distinct_objects(dynamic)))
+        f.write('\n'.join(distinct_objects(dynamic_merged)))
 
     return 0

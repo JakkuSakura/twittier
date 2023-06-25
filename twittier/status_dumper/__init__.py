@@ -1,1 +1,1 @@
-from .status_dumper import dumper
+from .status_dumper import parse_and_dump_har_file

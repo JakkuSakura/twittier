@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Twittier</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"/>
 </head>
@@ -43,7 +44,7 @@
         const fileData = await file.getFile();
         console.log('file', fileData)
         const harfile = JSON.parse(await fileData.text())
-        const result = dumper(harfile);
+        const result = parse_har_content(harfile);
         console.log("parsed data", result)
         process(result)
     }

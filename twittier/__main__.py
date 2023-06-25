@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from .status_dumper import dumper
+from .status_dumper import parse_and_dump_har_file
 from .lucky_draw import draw
 
 
@@ -22,7 +22,7 @@ def main():
     args = parser.parse_args()
 
     if args.subparser_name == 'status_dumper':
-        return dumper(args.path)
+        return parse_and_dump_har_file(args.path)
     elif args.subparser_name == 'draw':
         if len(args.pool) == 0:
             print('twittier draw: error: the following arguments are required: -p/--pool (at least one)')
