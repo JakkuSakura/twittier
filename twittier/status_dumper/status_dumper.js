@@ -10,7 +10,6 @@ function get_type_by_url(url) {
         return null;
     for (const t of Object.values(RequestType)) {
         if (url.includes(t)) {
-            console.log(url, t, url.includes(t));
             return t;
         }
     }
@@ -41,7 +40,6 @@ function get_favorite_users(response, user_actions) {
     } catch (error) {
         return;
     }
-    console.log("entries", data['favoriters_timeline'], entries);
 
     let entry_rt = [];
 
@@ -58,7 +56,6 @@ function get_favorite_users(response, user_actions) {
         entry_rt.push(entry);
         insert_user_action(user_actions, legacy['screen_name'], '喜欢');
     }
-
     return entry_rt;
 }
 
@@ -108,11 +105,10 @@ function get_comments(response, user_actions) {
     const entry_rt = [];
     for (let i in entries) {
         const entry = entries[i];
-        console.log("entry", entry);
         if (!entry['entryId'].startsWith('conversationthread')) {
             continue;
         }
-        var legacy;
+        let legacy;
         try {
             legacy = entry['content']['items']['item']['itemContent']['tweet_results']['result']['core']['user_results']['result']['legacy'];
         } catch (e) {
@@ -125,14 +121,14 @@ function get_comments(response, user_actions) {
 }
 
 function get_quotes(response) {
-    var data = JSON.parse(response['content']['text']);
+    let data = JSON.parse(response['content']['text']);
     try {
-        var tweets = data['globalObjects']['tweets'];
+        let tweets = data['globalObjects']['tweets'];
     } catch (KeyError) {
         return;
     }
-    var rt = [];
-    for (var tweet in Object.values(tweets)) {
+    let rt = [];
+    for (let tweet in Object.values(tweets)) {
         if ('quoted_status_id' in tweet) {
             rt.push(tweet);
         }
@@ -141,15 +137,15 @@ function get_quotes(response) {
 }
 
 function distinct_objects(objs) {
-    var strs = new Set();
-    for (var i in objs) {
+    let strs = new Set();
+    for (let i in objs) {
         const obj = objs[i];
         strs.add(JSON.stringify(obj, null, 2));
     }
     strs = Array.from(strs);
     strs.sort();
-    var output = [];
-    for (var i in strs) {
+    let output = [];
+    for (let i in strs) {
         const str = strs[i];
         output.push(JSON.parse(str));
     }
@@ -160,7 +156,7 @@ function joinString(l, s) {
     if (l instanceof Set) {
         l = Array.from(l)
     }
-    var ret = '';
+    let ret = '';
     for (const i in l) {
         const ss = l[i];
         if (i > 0)
@@ -170,8 +166,8 @@ function joinString(l, s) {
     return ret;
 }
 function compute_dynamic_list(user_actions) {
-    var dynamic = [];
-    for (var [user, actions] of Object.entries(user_actions)) {
+    let dynamic = [];
+    for (let [user, actions] of Object.entries(user_actions)) {
         dynamic.push(`@${user} ${joinString(actions, ' ')}`);
     }
     dynamic.sort();
@@ -179,51 +175,45 @@ function compute_dynamic_list(user_actions) {
 }
 
 function parse_har_content(har) {
-    console.log('Har', har)
-    var likes = [];
-    var retweets = [];
-    var comments = [];
-    var quotes = [];
-    var dynamic = {};
+    let likes = [];
+    let retweets = [];
+    let comments = [];
+    let quotes = [];
+    let dynamic = {};
 
-    // assuming har JSON data is already loaded into har variable
-    var entries = har['log']['entries'];
-    for (var i in entries) {
+    // assuming har JSON data is already loaded into har letiable
+    let entries = har['log']['entries'];
+    for (let i in entries) {
         const entry = entries[i];
-        var url = entry['request']?.['url'];
-        var response = entry['response'];
-        var req_type = get_type_by_url(url);
+        let url = entry['request']?.['url'];
+        let response = entry['response'];
+        let req_type = get_type_by_url(url);
         if (!req_type) {
             continue;
         }
-        console.log("reqtype", req_type);
         if (req_type === RequestType.FAVORITERS) {
-            console.log('Fav', entry)
-            var rt = get_favorite_users(response, dynamic);
+            let rt = get_favorite_users(response, dynamic);
             if (rt === undefined) {
                 continue;
             }
             likes = likes.concat(rt);
         } else if (req_type === RequestType.RETWEETERS) {
-            console.log('Ret', entry)
 
-            var rt = get_retweeters(response, dynamic);
+            let rt = get_retweeters(response, dynamic);
             if (rt === undefined) {
                 continue;
             }
             retweets.push(rt);
         } else if (req_type === RequestType.COMMENT) {
-            console.log('comment', entry)
 
-            var rt = get_comments(response, dynamic);
+            let rt = get_comments(response, dynamic);
             if (rt === undefined) {
                 continue;
             }
             comments.push(rt);
         } else if (req_type === RequestType.QUOTES) {
-            console.log('quotes', entry)
 
-            var rt = get_quotes(response);
+            let rt = get_quotes(response);
             if (rt === undefined) {
                 continue;
             }
@@ -238,7 +228,7 @@ function parse_har_content(har) {
     dynamic = compute_dynamic_list(dynamic);
 
     // assuming you want to dump the results to files
-    // var fs = require('fs');
+    // let fs = require('fs');
     // fs.writeFileSync('likes.json', JSON.stringify(likes, null, 2));
     // fs.writeFileSync('retweets.json', JSON.stringify(retweets, null, 2));
     // fs.writeFileSync('comments.json', JSON.stringify(comments, null, 2));

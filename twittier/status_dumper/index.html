@@ -19,6 +19,7 @@
         <th>Age</th>
     </tr>
     </thead>
+    <tbody></tbody>
 </table>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
@@ -40,19 +41,16 @@
         };
         const files = await window.showOpenFilePicker(pickerOpts)
         const file = files[0];
-        console.log("Picked file");
         const fileData = await file.getFile();
-        console.log('file', fileData)
         const harfile = JSON.parse(await fileData.text())
         const result = parse_har_content(harfile);
-        console.log("parsed data", result)
         process(result)
     }
 
     function process(users) {
         var tbody = $("#table-of-like-users tbody");
         tbody.empty();
-        for (var i = 0; i < users.length; i++) {
+        for (let i = 0; i < users.length; i++) {
             tbody.append("<tr><td>" + users[i] + "</td></tr>");
         }
     }
