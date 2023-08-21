@@ -12,15 +12,14 @@ def draw(path: str, pools: List[int], requires: List[str]):
         dynamics = f.readlines()
 
     for dynamic in dynamics:
-        if '评论了推文' in dynamic:
+        if '评论' in dynamic:
             comments.add(dynamic.split()[0])
-        if '转推了推文' in dynamic:
+        if '转推' in dynamic:
             retweets.add(dynamic.split()[0])
-        if '喜欢了推文' in dynamic:
+        if '喜欢' in dynamic:
             likes.add(dynamic.split()[0])
-        if '引用了推文' in dynamic:
+        if '引用' in dynamic:
             quotes.add(dynamic.split()[0])
-
     retweets = retweets | quotes
     users = comments | retweets | likes
 
@@ -42,7 +41,7 @@ def draw(path: str, pools: List[int], requires: List[str]):
 
     for pool, count in enumerate(pools):
         print(f'====== Pool: {pool + 1} Start ======')
-        user_sample = random.sample(users, count)
+        user_sample = random.sample(sorted(users), count)
         for i, user in enumerate(user_sample):
             print(f'{user:<18}', end='') if i % 5 != 4 else print(f'{user:<18}')
         if len(user_sample) % 5 != 0:
