@@ -146,7 +146,10 @@ def parse_and_dump_har_file(path: str) -> int:
                 continue
             retweets.extend(rt)
         elif req_type == RequestType.COMMENT:
-            rt = get_comments(response, dynamic)
+            try:
+                rt = get_comments(response, dynamic)
+            except:
+                continue
             if rt is None:
                 continue
             comments.extend(rt)
